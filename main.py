@@ -35,12 +35,16 @@ class Weather:
         with open("./tenkiData.json","w",encoding="utf-8") as tenki:
             json.dump(self.tenki_data,tenki)
 myWeather = Weather()
-
+myWeather.update()
+myWeather.dumpTenkiDict()
 #秒より下の数字はいらないので必要な部分のみを取り出すための正規表現のパターン
-pattern = r"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}" 
+pattern = r"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}" 
 
 #俺的曜日表現
 weekDayConvList = ["GETU","KA","SUI","MOKU","KIN","DOU","NITI"]
+
+#俺的天気表現
+weatherTelopDict = {"晴れ":"HARE","曇り":"曇り","雨":"AME"}
 
 #シリアルポートオープン
 with serial.Serial('COM3',9600,timeout=1) as ser:
@@ -53,12 +57,12 @@ with serial.Serial('COM3',9600,timeout=1) as ser:
 
             #ここで実際に送信する文字列を組み立てる。年-月-日 (曜日) 時:分:秒 のフォーマット
             sendStr = \
-                "\nSENDAI\nMAX:" + \
-                myWeather.tenki_data["forecasts"][0]["temperature"]["max"]["celsius"] + "\'C\nMIN:" + \
+                "\n"+ weatherTelopDict[myWeather.tenki_data["forecasts"][0]["telop"]] +"\nMAX:" + \
+                (myWeather.tenki_data["forecasts"][0]["temperature"]["max"]["celsius"] + "\'C" if myWeather.tenki_data["forecasts"][0]["temperature"]["max"] != None else "None") +"\nMIN:" + \
                 (myWeather.tenki_data["forecasts"][0]["temperature"]["min"]["celsius"] + "\'C" if myWeather.tenki_data["forecasts"][0]["temperature"]["min"] != None else "None") + "\n" + \
                 "" + re.search(r"\d{4}.\d{2}.\d{2}",newDatetime).group() +\
-                "(" +weekDayConvList[weekDayInt] + ")" + "\n" + \
-                re.search(r"\d{2}:\d{2}:\d{2}",newDatetime).group()
+                "(" + weekDayConvList[weekDayInt] + ")" + "\n" + \
+                re.search(r"\d{2}:\d{2}",newDatetime).group()
                 
             print(sendStr) #念のために表示
             flag=bytes(sendStr,'utf-8') #バイト型に変換
@@ -73,6 +77,6 @@ with serial.Serial('COM3',9600,timeout=1) as ser:
             myWeather.update()
 
             #シリアル通信:送信
-        time.sleep(0.1) #このループを0.1秒間隔で行う
+        time.sleep(1) #このループを0.1秒間隔で行う
     ser.close()
     

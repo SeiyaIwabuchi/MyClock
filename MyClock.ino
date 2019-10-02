@@ -38,6 +38,7 @@
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
+#define MYCOLOR 0x1a2d
 
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
@@ -68,7 +69,7 @@ void loop(void) {
     }
     tft.fillScreen(BLACK);
     tft.setCursor(0, 0);
-    tft.setTextColor(WHITE);
+    tft.setTextColor(MYCOLOR);
     tft.setTextSize(5);
     tft.println(str);
   }
