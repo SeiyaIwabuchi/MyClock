@@ -44,7 +44,7 @@ pattern = r"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}"
 weekDayConvList = ["GETU","KA","SUI","MOKU","KIN","DOU","NITI"]
 
 #俺的天気表現
-weatherTelopDict = {"晴れ":"HARE","曇り":"曇り","雨":"AME"}
+weatherTelopDict = {"晴れ":"HARE","曇り":"曇り","雨":"AME","曇のち雨":"KUMO->AME"}
 
 #シリアルポートオープン
 with serial.Serial('COM3',9600,timeout=1) as ser:
@@ -54,10 +54,14 @@ with serial.Serial('COM3',9600,timeout=1) as ser:
         if newDatetime != oldDatetime: #意味的には一秒以上の変化があったとき、やってることは異なるか比較している
             oldDatetime = newDatetime #前の時刻を更新
             weekDayInt = datetime.datetime.now().weekday() #曜日取得
-
+            weatherTelop = ""
+            try:
+                weatherTelop = weatherTelopDict[myWeather.tenki_data["forecasts"][0]["telop"]]
+            except KeyError:
+                weatherTelop = "Unknown"
             #ここで実際に送信する文字列を組み立てる。年-月-日 (曜日) 時:分:秒 のフォーマット
             sendStr = \
-                "\n"+ weatherTelopDict[myWeather.tenki_data["forecasts"][0]["telop"]] +"\nMAX:" + \
+                "\n"+ weatherTelop +"\nMAX:" + \
                 (myWeather.tenki_data["forecasts"][0]["temperature"]["max"]["celsius"] + "\'C" if myWeather.tenki_data["forecasts"][0]["temperature"]["max"] != None else "None") +"\nMIN:" + \
                 (myWeather.tenki_data["forecasts"][0]["temperature"]["min"]["celsius"] + "\'C" if myWeather.tenki_data["forecasts"][0]["temperature"]["min"] != None else "None") + "\n" + \
                 "" + re.search(r"\d{4}.\d{2}.\d{2}",newDatetime).group() +\
