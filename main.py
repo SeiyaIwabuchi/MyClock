@@ -12,23 +12,21 @@ class Weather:
         self.payload = {"city":"040010"} #http://weather.livedoor.com/forecast/rss/primary_area.xml ここに地域コードが書いてあります。
         self.tenki_data = requests.get(self.url, params=self.payload).json()
         self.oldGetTime = datetime.datetime.now()
+        self.printWeather()
     
     def update(self):
         if datetime.datetime.now() - self.oldGetTime >= datetime.timedelta(days=1):
             self.tenki_data = requests.get(self.url, params=self.payload).json()
             self.oldGetTime = datetime.datetime.now()
             print("Weather Update")
+            self.printWeather()
     
     def printWeather(self):
         print(self.tenki_data["title"])
         print(self.tenki_data["forecasts"][0]["date"])
         print(self.tenki_data["forecasts"][0]["telop"])
-        print(self.tenki_data["forecasts"][0]["temperature"]["max"]["celsius"])
-        print(self.tenki_data["forecasts"][0]["temperature"]["max"]["fahrenheit"])
-        print(self.tenki_data["forecasts"][1]["date"])
-        print(self.tenki_data["forecasts"][1]["telop"])
-        print(self.tenki_data["forecasts"][1]["temperature"]["max"]["celsius"])
-        print(self.tenki_data["forecasts"][1]["temperature"]["max"]["fahrenheit"])
+        print(self.tenki_data["forecasts"][0]["temperature"]["max"]["celsius"] if self.tenki_data["forecasts"][0]["temperature"]["max"] != None else "None")
+        print(self.tenki_data["forecasts"][0]["temperature"]["min"]["celsius"] if self.tenki_data["forecasts"][0]["temperature"]["min"] != None else "None")
         print(self.tenki_data["publicTime"])
 
     def dumpTenkiDict(self):
@@ -44,7 +42,7 @@ pattern = r"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}"
 weekDayConvList = ["GETU","KA","SUI","MOKU","KIN","DOU","NITI"]
 
 #俺的天気表現
-weatherTelopDict = {"晴れ":"HARE","曇り":"曇り","雨":"AME","曇のち雨":"KUMO->AME"}
+weatherTelopDict = {"晴れ":"HARE\n","曇り":"KUMORI\n","雨":"AME\n","曇のち雨":"KUMO->AME\n","雨時々曇":"AME<->KUMO","晴時々曇":"HARE<>KUMO"}
 
 #シリアルポートオープン
 with serial.Serial('COM3',9600,timeout=1) as ser:
@@ -61,7 +59,7 @@ with serial.Serial('COM3',9600,timeout=1) as ser:
                 weatherTelop = "Unknown"
             #ここで実際に送信する文字列を組み立てる。年-月-日 (曜日) 時:分:秒 のフォーマット
             sendStr = \
-                "\n"+ weatherTelop +"\nMAX:" + \
+                "\n"+ weatherTelop +"MAX:" + \
                 (myWeather.tenki_data["forecasts"][0]["temperature"]["max"]["celsius"] + "\'C" if myWeather.tenki_data["forecasts"][0]["temperature"]["max"] != None else "None") +"\nMIN:" + \
                 (myWeather.tenki_data["forecasts"][0]["temperature"]["min"]["celsius"] + "\'C" if myWeather.tenki_data["forecasts"][0]["temperature"]["min"] != None else "None") + "\n" + \
                 "" + re.search(r"\d{4}.\d{2}.\d{2}",newDatetime).group() +\
